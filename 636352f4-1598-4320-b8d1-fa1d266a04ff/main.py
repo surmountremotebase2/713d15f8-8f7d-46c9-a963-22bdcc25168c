@@ -38,7 +38,7 @@ class TradingStrategy(Strategy):
         latest_close_price = ohlcv_data[-1][self.ticker]["close"]
         
         # Decision logic for entering and exiting the trade.
-        if latest_close_price > sma_5[-1] and latest_close_price < sma_13[-1]:
+        if latest_close_price > sma_5[-1] and latest_close_price > sma_13[-1]:
             # If price crosses above the 5-day SMA and is still below the 13-day SMA, go long.
             allocation = 1.0
         elif latest_close_price < sma_13[-1]:
