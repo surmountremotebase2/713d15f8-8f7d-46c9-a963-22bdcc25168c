@@ -67,7 +67,7 @@ class MyStrategy(Strategy):
 
     @property
     def assets(self):
-        return ["SPY", "QQQ", "AAPL", "GOOGL"]  # Add your desired assets
+        return ["AAPL"]  # Add your desired assets
 
     def run(self, data):
         allocation_dict = {ticker: 0 for ticker in self.assets}
