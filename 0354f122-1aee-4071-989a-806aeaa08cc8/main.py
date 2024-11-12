@@ -1,8 +1,9 @@
+import numpy as np
 from surmount.base_class import Strategy, TargetAllocation
 from surmount.technical_indicators import MACD, SMA, VWAP
 from surmount.logging import log
-import numpy as np
 
+# Define the SAM function
 def SAM(ticker, data, cc_length=8, median_length=8, smooth_length=8):
     price_data = [i[ticker]['close'] for i in data]
     
@@ -11,6 +12,7 @@ def SAM(ticker, data, cc_length=8, median_length=8, smooth_length=8):
 
     price = np.array(price_data)
 
+    # Define the Cyber Cycle function
     def cyber_cycle(src, length):
         smooth = (src + 2 * np.roll(src, 1) + 2 * np.roll(src, 2) + np.roll(src, 3)) / 6
         cycle = np.zeros_like(smooth)
@@ -18,8 +20,28 @@ def SAM(ticker, data, cc_length=8, median_length=8, smooth_length=8):
             cycle[i] = (1.0 - 0.5 * 0.707) * (smooth[i] - 2.0 * smooth[i-1] + smooth[i-2]) + 2.0 * 0.707 * cycle[i-1] - 0.707**2 * cycle[i-2]
         return cycle
 
-    cc = cyber_cycle(price, cc_length)
+    # Define the Dominant Cycle Period function
+    def dominant_cycle_period(cycle, med_len):
+        real = cycle
+        imag = np.roll(cycle, 1)
+        period = np.zeros_like(cycle)
+        inst_periods = []  # List to hold instantaneous periods
 
+        for i in range(1, len(cycle)):
+            if real[i] != 0 and real[i-1] != 0:
+                delta_phi = (imag[i] / real[i] - imag[i-1] / real[i-1]) / (1 + imag[i] / real[i] * imag[i-1] / real[i-1])
+                inst_period = 2 * np.pi / np.abs(delta_phi)
+                inst_periods.append(inst_period)  # Store instantaneous period
+                
+                # Only calculate median if we have enough periods
+                if len(inst_periods) >= med_len:
+                    period[i] = np.median(inst_periods[-med_len:])  # Use last 'med_len' periods
+            else:
+                inst_periods.append(np.nan)  # Append NaN if not calculable
+
+        return np.maximum(period, 2)  # Ensure period is at least 2
+
+    cc = cyber_cycle(price, cc_length)
     dc_period = dominant_cycle_period(cc, median_length)
 
     lookback = np.round(dc_period).astype(int) - 1
@@ -37,14 +59,15 @@ def SAM(ticker, data, cc_length=8, median_length=8, smooth_length=8):
 
     return sam.tolist()
 
-class TradingStrategy(Strategy):
+# Define your trading strategy class
+class MyStrategy(Strategy):
     @property
     def interval(self):
         return "1day"
 
     @property
     def assets(self):
-        return ["AAPL"]  # Add your desired assets
+        return ["SPY", "QQQ", "AAPL", "GOOGL"]  # Add your desired assets
 
     def run(self, data):
         allocation_dict = {ticker: 0 for ticker in self.assets}
@@ -57,7 +80,7 @@ class TradingStrategy(Strategy):
             # Calculate indicators
             sam = SAM(ticker, price_data)
             macd = MACD(ticker, price_data, 12, 26, 9)
-            ema_150 = SMA(ticker, price_data, 150)  # Using SMA as EMA might not be available
+            ema_150 = SMA(ticker, price_data, 150)  
             vwap = VWAP(ticker, price_data)
 
             if sam is None or macd is None or ema_150 is None or vwap is None:
@@ -74,12 +97,12 @@ class TradingStrategy(Strategy):
             log(f"VWAP: {vwap[-1]}")
             
             # Define your strategy conditions
-            if (sam[-1] > 0 and  # SAM is positive
-                macd['macd'][-1] > macd['signal'][-1] and  # MACD line above signal line
-                current_price > ema_150[-1] and  # Price above 150-day EMA
-                current_price > vwap[-1]):  # Price above VWAP
+            if (sam[-1] > 0 and 
+                macd['macd'][-1] > macd['signal'][-1] and 
+                current_price > ema_150[-1] and 
+                current_price > vwap[-1]):
                 
-                allocation_dict[ticker] = 0.25  # Allocate 25% to this asset
+                allocation_dict[ticker] = 0.25  
                 log(f"Buy signal for {ticker}")
             else:
                 log(f"No signal for {ticker}")
