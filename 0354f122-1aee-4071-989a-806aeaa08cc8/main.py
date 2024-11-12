@@ -62,11 +62,11 @@ class TradingStrategy(Strategy):
 
     @property
     def assets(self):
-        return ["SPY", "QQQ", "AAPL", "GOOGL"]  # Add your desired assets
+        return ["AAPL"]  # Add your desired assets
 
     def run(self, data):
-    allocation_dict = {ticker: 0 for ticker in self.assets}
-    price_data = data["ohlcv"]
+        allocation_dict = {ticker: 0 for ticker in self.assets}
+        price_data = data["ohlcv"]
 
     for ticker in self.assets:
         if len(price_data) < 150:  # Ensure we have enough data
