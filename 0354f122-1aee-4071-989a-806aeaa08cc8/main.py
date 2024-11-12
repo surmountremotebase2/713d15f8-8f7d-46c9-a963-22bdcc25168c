@@ -60,23 +60,6 @@ def SAM(ticker, data, cc_length=8, median_length=8, smooth_length=8):
 
     return sam.tolist()
 
-from datetime import datetime
-
-def VWAP(ticker, price_data, length):
-    # Assuming 'data' is passed as price_data
-    dates = []
-    for i in price_data:
-        try:
-            date_str = i[ticker]["date"]
-            date_obj = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')  # Updated format
-            dates.append(date_obj)
-        except ValueError as e:
-            print(f"Error parsing date '{date_str}': {e}")
-    
-    # Continue with VWAP calculation...
-
-
-
 # Define your trading strategy class
 class TradingStrategy(Strategy):
     @property
@@ -99,8 +82,7 @@ class TradingStrategy(Strategy):
             sam = SAM(ticker, price_data)
             macd = MACD(ticker, price_data, fast=12, slow=26)
             ema_150 = SMA(ticker, price_data, length=150)  
-            vwap = VWAP(ticker, price_data, length=14)
-
+            
             if sam is None or macd is None or ema_150 is None or vwap is None:
                 continue
 
@@ -112,14 +94,12 @@ class TradingStrategy(Strategy):
             log(f"SAM: {sam[-1]}")
             log(f"MACD: {macd['macd'][-1]}, Signal: {macd['signal'][-1]}")
             log(f"150-day EMA: {ema_150[-1]}")
-            log(f"VWAP: {vwap[-1]}")
-        
+                    
              # Define your buy conditions
             if (sam[-1] > 0 and 
                 macd['macd'][-1] > macd['signal'][-1] and 
                 current_price > ema_150[-1] and 
-                current_price > vwap[-1]):
-                
+                                
                 allocation_dict[ticker] = 0.25  # Allocate 25% to this asset  
                 log(f"Buy signal for {ticker}")
 
