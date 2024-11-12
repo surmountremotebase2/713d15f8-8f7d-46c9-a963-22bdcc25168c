@@ -21,15 +21,24 @@ def SAM(ticker, data, cc_length=8, median_length=8, smooth_length=8):
     cc = cyber_cycle(price, cc_length)
 
     def dominant_cycle_period(cycle, med_len):
-        real = cycle
-        imag = np.roll(cycle, 1)
-        period = np.zeros_like(cycle)
-        for i in range(1, len(cycle)):
-            if real[i] != 0 and real[i-1] != 0:
-                delta_phi = (imag[i] / real[i] - imag[i-1] / real[i-1]) / (1 + imag[i] / real[i] * imag[i-1] / real[i-1])
-                inst_period = 2 * np.pi / np.abs(delta_phi)
-                period[i] = np.median(inst_period[max(0, i-med_len+1):i+1])
-        return np.maximum(period, 2)
+    real = cycle
+    imag = np.roll(cycle, 1)
+    period = np.zeros_like(cycle)
+    inst_periods = []  # List to hold instantaneous periods
+
+    for i in range(1, len(cycle)):
+        if real[i] != 0 and real[i-1] != 0:
+            delta_phi = (imag[i] / real[i] - imag[i-1] / real[i-1]) / (1 + imag[i] / real[i] * imag[i-1] / real[i-1])
+            inst_period = 2 * np.pi / np.abs(delta_phi)
+            inst_periods.append(inst_period)  # Store instantaneous period
+            
+            # Only calculate median if we have enough periods
+            if len(inst_periods) >= med_len:
+                period[i] = np.median(inst_periods[-med_len:])  # Use last 'med_len' periods
+        else:
+            inst_periods.append(np.nan)  # Append NaN if not calculable
+
+    return np.maximum(period, 2)  # Ensure period is at least 2
 
     dc_period = dominant_cycle_period(cc, median_length)
 
