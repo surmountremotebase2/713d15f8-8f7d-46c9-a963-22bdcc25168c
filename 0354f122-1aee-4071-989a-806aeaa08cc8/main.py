@@ -70,43 +70,43 @@ class MyStrategy(Strategy):
         return ["AAPL"]  # Add your desired assets
 
     def run(self, data):
-        allocation_dict = {ticker: 0 for ticker in self.assets}
-        price_data = data["ohlcv"]
+    allocation_dict = {ticker: 0 for ticker in self.assets}
+    price_data = data["ohlcv"]
 
-        for ticker in self.assets:
-            if len(price_data) < 150:  # Ensure we have enough data
-                continue
+    for ticker in self.assets:
+        if len(price_data) < 150:  # Ensure we have enough data
+            continue
 
-            # Calculate indicators
-            sam = SAM(ticker, price_data)
-            macd = MACD(ticker, price_data, 12, 26)
-            ema_150 = SMA(ticker, price_data, 150)  
-            vwap = VWAP(ticker, price_data)
+        # Calculate indicators
+        sam = SAM(ticker, price_data)
+        macd = MACD(ticker, price_data, 12, 26)  # Adjusted to only pass required parameters
+        ema_150 = SMA(ticker, price_data, 150)  
+        vwap = VWAP(ticker, price_data)
 
-            if sam is None or macd is None or ema_150 is None or vwap is None:
-                continue
+        if sam is None or macd is None or ema_150 is None or vwap is None:
+            continue
 
-            current_price = price_data[-1][ticker]['close']
+        current_price = price_data[-1][ticker]['close']
+        
+        # Logging for debugging
+        log(f"--- Debug info for {ticker} ---")
+        log(f"Current Price: {current_price}")
+        log(f"SAM: {sam[-1]}")
+        log(f"MACD: {macd['macd'][-1]}, Signal: {macd['signal'][-1]}")
+        log(f"150-day EMA: {ema_150[-1]}")
+        log(f"VWAP: {vwap[-1]}")
+        
+        # Define your strategy conditions
+        if (sam[-1] > 0 and 
+            macd['macd'][-1] > macd['signal'][-1] and 
+            current_price > ema_150[-1] and 
+            current_price > vwap[-1]):
             
-            # Logging for debugging
-            log(f"--- Debug info for {ticker} ---")
-            log(f"Current Price: {current_price}")
-            log(f"SAM: {sam[-1]}")
-            log(f"MACD: {macd['macd'][-1]}, Signal: {macd['signal'][-1]}")
-            log(f"150-day EMA: {ema_150[-1]}")
-            log(f"VWAP: {vwap[-1]}")
-            
-            # Define your strategy conditions
-            if (sam[-1] > 0 and 
-                macd['macd'][-1] > macd['signal'][-1] and 
-                current_price > ema_150[-1] and 
-                current_price > vwap[-1]):
-                
-                allocation_dict[ticker] = 0.25  
-                log(f"Buy signal for {ticker}")
-            else:
-                log(f"No signal for {ticker}")
-            
-            log("----------------------------")
+            allocation_dict[ticker] = 0.25  
+            log(f"Buy signal for {ticker}")
+        else:
+            log(f"No signal for {ticker}")
+        
+        log("----------------------------")
 
-        return TargetAllocation(allocation_dict)
+    return TargetAllocation(allocation_dict)
