@@ -1,4 +1,4 @@
-from surmount.base_class import Strategy, TargetAllocation
+from surmount.base_class import TradingStrategy, TargetAllocation
 from surmount.technical_indicators import MACD, SMA, VWAP
 from surmount.logging import log
 import numpy as np
