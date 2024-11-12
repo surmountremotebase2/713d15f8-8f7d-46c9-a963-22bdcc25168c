@@ -81,7 +81,7 @@ class TradingStrategy(Strategy):
             sam = SAM(ticker, price_data)
             macd = MACD(ticker, price_data, 12, 26)  # Adjusted to only pass required parameters
             ema_150 = SMA(ticker, price_data, 150)  
-            vwap = VWAP(ticker, price_data,1)
+            vwap = VWAP(ticker, price_data,14)
 
             if sam is None or macd is None or ema_150 is None or vwap is None:
                 continue
