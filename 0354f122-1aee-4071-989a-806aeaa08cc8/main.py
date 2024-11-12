@@ -13,36 +13,37 @@ def SAM(ticker, data, cc_length=8, median_length=8, smooth_length=8):
     price = np.array(price_data)
 
     # Define the Cyber Cycle function
-    def cyber_cycle(src, length):
+    def cyber_cycle(src):
         smooth = (src + 2 * np.roll(src, 1) + 2 * np.roll(src, 2) + np.roll(src, 3)) / 6
         cycle = np.zeros_like(smooth)
         for i in range(2, len(smooth)):
-            cycle[i] = (1.0 - 0.5 * 0.707) * (smooth[i] - 2.0 * smooth[i-1] + smooth[i-2]) + 2.0 * 0.707 * cycle[i-1] - 0.707**2 * cycle[i-2]
+            cycle[i] = (1.0 - 0.5 * 0.707) * (smooth[i] - 2.0 * smooth[i-1] + smooth[i-2]) + \
+                        2.0 * 0.707 * cycle[i-1] - 0.707**2 * cycle[i-2]
         return cycle
 
     # Define the Dominant Cycle Period function
-    def dominant_cycle_period(cycle, med_len):
+    def dominant_cycle_period(cycle):
         real = cycle
         imag = np.roll(cycle, 1)
         period = np.zeros_like(cycle)
-        inst_periods = []  # List to hold instantaneous periods
+        inst_periods = []  
 
         for i in range(1, len(cycle)):
             if real[i] != 0 and real[i-1] != 0:
-                delta_phi = (imag[i] / real[i] - imag[i-1] / real[i-1]) / (1 + imag[i] / real[i] * imag[i-1] / real[i-1])
+                delta_phi = (imag[i] / real[i] - imag[i-1] / real[i-1]) / \
+                             (1 + imag[i] / real[i] * imag[i-1] / real[i-1])
                 inst_period = 2 * np.pi / np.abs(delta_phi)
-                inst_periods.append(inst_period)  # Store instantaneous period
+                inst_periods.append(inst_period)  
                 
-                # Only calculate median if we have enough periods
-                if len(inst_periods) >= med_len:
-                    period[i] = np.median(inst_periods[-med_len:])  # Use last 'med_len' periods
+                if len(inst_periods) >= median_length:
+                    period[i] = np.median(inst_periods[-median_length:])  
             else:
-                inst_periods.append(np.nan)  # Append NaN if not calculable
+                inst_periods.append(np.nan)
 
-        return np.maximum(period, 2)  # Ensure period is at least 2
+        return np.maximum(period, 2)
 
-    cc = cyber_cycle(price, cc_length)
-    dc_period = dominant_cycle_period(cc, median_length)
+    cc = cyber_cycle(price)
+    dc_period = dominant_cycle_period(cc)
 
     lookback = np.round(dc_period).astype(int) - 1
     value = price - np.roll(price, lookback)
@@ -67,28 +68,28 @@ class TradingStrategy(Strategy):
 
     @property
     def assets(self):
-        return ["AAPL"]  # Add your desired assets
+        return ["AAPL"]  
 
     def run(self, data):
         allocation_dict = {ticker: 0 for ticker in self.assets}
         price_data = data["ohlcv"]
 
         for ticker in self.assets:
-            if len(price_data) < 150:  # Ensure we have enough data
+            if len(price_data) < max(150, 14):  
                 continue
 
-        # Calculate indicators
+            # Calculate indicators
             sam = SAM(ticker, price_data)
-            macd = MACD(ticker, price_data, 12, 26)  # Adjusted to only pass required parameters
-            ema_150 = SMA(ticker, price_data, 150)  
-            vwap = VWAP(ticker, price_data,14)
+            macd = MACD(ticker, price_data)
+            ema_150 = SMA(ticker, price_data, length=150)  
+            vwap = VWAP(ticker, price_data)
 
             if sam is None or macd is None or ema_150 is None or vwap is None:
                 continue
 
             current_price = price_data[-1][ticker]['close']
         
-        # Logging for debugging
+            # Logging for debugging
             log(f"--- Debug info for {ticker} ---")
             log(f"Current Price: {current_price}")
             log(f"SAM: {sam[-1]}")
@@ -96,7 +97,7 @@ class TradingStrategy(Strategy):
             log(f"150-day EMA: {ema_150[-1]}")
             log(f"VWAP: {vwap[-1]}")
         
-        # Define your strategy conditions
+            # Define your strategy conditions
             if (sam[-1] > 0 and 
                 macd['macd'][-1] > macd['signal'][-1] and 
                 current_price > ema_150[-1] and 
@@ -106,7 +107,7 @@ class TradingStrategy(Strategy):
                 log(f"Buy signal for {ticker}")
             else:
                 log(f"No signal for {ticker}")
-        
+
             log("----------------------------")
 
         return TargetAllocation(allocation_dict)
