@@ -79,7 +79,7 @@ class MyStrategy(Strategy):
 
             # Calculate indicators
             sam = SAM(ticker, price_data)
-            macd = MACD(ticker, price_data, 12, 26, 9)
+            macd = MACD(ticker, price_data, 12, 26)
             ema_150 = SMA(ticker, price_data, 150)  
             vwap = VWAP(ticker, price_data)
 
