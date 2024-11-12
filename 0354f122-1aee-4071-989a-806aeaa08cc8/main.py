@@ -60,6 +60,23 @@ def SAM(ticker, data, cc_length=8, median_length=8, smooth_length=8):
 
     return sam.tolist()
 
+from datetime import datetime
+
+def VWAP(ticker, price_data, length):
+    # Assuming 'data' is passed as price_data
+    dates = []
+    for i in price_data:
+        try:
+            date_str = i[ticker]["date"]
+            date_obj = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')  # Updated format
+            dates.append(date_obj)
+        except ValueError as e:
+            print(f"Error parsing date '{date_str}': {e}")
+    
+    # Continue with VWAP calculation...
+
+
+
 # Define your trading strategy class
 class TradingStrategy(Strategy):
     @property
@@ -83,22 +100,6 @@ class TradingStrategy(Strategy):
             macd = MACD(ticker, price_data, fast=12, slow=26)
             ema_150 = SMA(ticker, price_data, length=150)  
             vwap = VWAP(ticker, price_data, length=14)
-
-        from datetime import datetime
-
-def VWAP(ticker, price_data, length):
-    # Assuming 'data' is passed as price_data
-    dates = []
-    for i in price_data:
-        try:
-            date_str = i[ticker]["date"]
-            date_obj = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')  # Updated format
-            dates.append(date_obj)
-        except ValueError as e:
-            print(f"Error parsing date '{date_str}': {e}")
-    
-    # Continue with VWAP calculation...
-
 
             if sam is None or macd is None or ema_150 is None or vwap is None:
                 continue
