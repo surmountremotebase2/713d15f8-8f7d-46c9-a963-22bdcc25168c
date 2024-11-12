@@ -55,7 +55,7 @@ def SAM(ticker, data, cc_length=8, median_length=8, smooth_length=8):
 
     return sam.tolist()
 
-class MyStrategy(Strategy):
+class TradingStrategy(Strategy):
     @property
     def interval(self):
         return "1day"
