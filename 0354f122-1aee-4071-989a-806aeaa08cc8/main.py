@@ -114,17 +114,23 @@ class TradingStrategy(Strategy):
             log(f"150-day EMA: {ema_150[-1]}")
             log(f"VWAP: {vwap[-1]}")
         
-            # Define your strategy conditions
+             # Define your buy conditions
             if (sam[-1] > 0 and 
                 macd['macd'][-1] > macd['signal'][-1] and 
                 current_price > ema_150[-1] and 
                 current_price > vwap[-1]):
-            
-                allocation_dict[ticker] = 0.25  
+                
+                allocation_dict[ticker] = 0.25  # Allocate 25% to this asset  
                 log(f"Buy signal for {ticker}")
-            else:
-                log(f"No signal for {ticker}")
 
+            # Define your sell condition
+            elif current_price < ema_150[-1]:  # Price drops below the 150-day SMA
+                allocation_dict[ticker] = 0.0  # Sell all or reduce position to zero
+                log(f"Sell signal for {ticker} - Price below 150-day SMA")
+
+            else:
+                log(f"No action for {ticker}")
+            
             log("----------------------------")
 
         return TargetAllocation(allocation_dict)
