@@ -96,7 +96,13 @@ class TradingStrategy(Strategy):
 
             # Calculate indicators
             sam = SAM(ticker, price_data)
+
+            log(f"Calculating MACD for {ticker}")
             macd = MACD(ticker, price_data, fast=12, slow=26)
+            if macd is None or 'macd' not in macd or 'signal' not in macd:
+                log(f"MACD calculation failed or returned unexpected structure for {ticker}")
+                    continue
+                    
             ema_150 = SMA(ticker, price_data, length=150)  
 
             if sam is None or macd is None or ema_150 is None:
