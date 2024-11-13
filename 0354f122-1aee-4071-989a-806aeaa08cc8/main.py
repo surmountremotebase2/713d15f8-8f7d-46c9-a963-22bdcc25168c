@@ -73,7 +73,7 @@ def SAM(ticker, data, cc_length=8, median_length=8, smooth_length=14):
 
     return bounded_sam.tolist()
 
-def custom_macd(prices, fast_period=12, slow_period=26, signal_period=9):
+def custom_macd(prices, fast_period=3, slow_period=10, signal_period=16):
     # Calculate EMAs
     ema_fast = np.convolve(prices, np.ones(fast_period)/fast_period, mode='valid')
     ema_slow = np.convolve(prices, np.ones(slow_period)/slow_period, mode='valid')
