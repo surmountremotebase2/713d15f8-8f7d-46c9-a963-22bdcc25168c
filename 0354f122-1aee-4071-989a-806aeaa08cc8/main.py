@@ -81,28 +81,33 @@ class TradingStrategy(Strategy):
                 continue
 
             current_price = price_data[-1][ticker]['close']
-        
+            
             # Logging for debugging
             log(f"--- Debug info for {ticker} ---")
             log(f"Current Price: {current_price}")
             log(f"SAM: {sam[-1]}")
+            log(f"Full MACD output: {macd}")
 
-            # Log the entire MACD output for debugging
-            log(f"MACD Output: {macd}")
-
-            if 'macd' in macd and 'signal' in macd:
-                log(f"MACD: {macd['macd'][-1]}, Signal: {macd['signal'][-1]}")
+            # Adjust MACD access based on actual output structure
+            if isinstance(macd, (list, np.ndarray)):
+                macd_line = macd[-1]  # Assuming last value is most recent
+                signal_line = macd[-2] if len(macd) > 1 else None
+            elif isinstance(macd, dict):
+                macd_line = macd.get('macd', [])[-1] if macd.get('macd') else None
+                signal_line = macd.get('signal', [])[-1] if macd.get('signal') else None
             else:
-                log("MACD output does not contain expected keys.")
-                continue  # Skip this iteration if keys are missing
-        
+                log(f"Unexpected MACD output type for {ticker}: {type(macd)}")
+                continue
+
+            log(f"MACD line: {macd_line}, Signal line: {signal_line}")
             log(f"150-day EMA: {ema_150[-1]}")
 
             # Entry condition without VWAP
             if (sam[-1] > 0 and 
-                macd['macd'][-1] > macd['signal'][-1] and 
+                macd_line is not None and signal_line is not None and
+                macd_line > signal_line and 
                 current_price > ema_150[-1]):  
-            
+                
                 allocation_dict[ticker] = 0.25  
                 log(f"Buy signal for {ticker}")
 
@@ -113,7 +118,7 @@ class TradingStrategy(Strategy):
 
             else:
                 log(f"No action for {ticker}")
-        
+            
             log("----------------------------")
 
         return TargetAllocation(allocation_dict)
