@@ -98,9 +98,8 @@ class TradingStrategy(Strategy):
             sam = SAM(ticker, price_data)
             macd = MACD(ticker, price_data, fast=12, slow=26)
             ema_150 = SMA(ticker, price_data, length=150)  
-            vwap = VWAP(ticker, price_data, length=14)
 
-            if sam is None or macd is None or ema_150 is None or vwap is None:
+            if sam is None or macd is None or ema_150 is None:
                 continue
 
             current_price = price_data[-1][ticker]['close']
@@ -111,13 +110,11 @@ class TradingStrategy(Strategy):
             log(f"SAM: {sam[-1]}")
             log(f"MACD: {macd['macd'][-1]}, Signal: {macd['signal'][-1]}")
             log(f"150-day EMA: {ema_150[-1]}")
-            log(f"VWAP: {vwap[-1]}")
 
             # Define your strategy conditions
             if (sam[-1] > 0 and 
                 macd['macd'][-1] > macd['signal'][-1] and 
-                current_price > ema_150[-1] and 
-                current_price > vwap[-1]):
+                current_price > ema_150[-1]:
                 
                 # Buy signal
                 allocation_dict[ticker] = 0.25  
