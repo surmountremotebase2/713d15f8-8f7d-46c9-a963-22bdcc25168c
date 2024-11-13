@@ -80,7 +80,7 @@ class TradingStrategy(Strategy):
 
     @property
     def assets(self):
-        return ["AAPL", "GOOGL"]
+        return ["SPY", "QQQ", "AAPL", "GOOGL"]
 
     def run(self, data):
         allocation_dict = {ticker: 0 for ticker in self.assets}
@@ -92,8 +92,7 @@ class TradingStrategy(Strategy):
 
             # Calculate indicators
             sam = SAM(ticker, price_data)
-            # Modified MACD call with new parameters: 3, 10, 16
-            macd = MACD(ticker, price_data, 3, 10, 16)  
+            macd = MACD(ticker, price_data)  # Use default parameters
             ema_150 = SMA(ticker, price_data, 150)  
 
             if sam is None or macd is None or ema_150 is None:
@@ -101,9 +100,9 @@ class TradingStrategy(Strategy):
 
             current_price = price_data[-1][ticker]['close']
             
-            # Extract MACD values with new key names
-            macd_line = macd['MACD_3_10_16'][-1]
-            signal_line = macd['MACDs_3_10_16'][-1]
+            # Extract MACD values
+            macd_line = macd['MACD_12_26_9'][-1]
+            signal_line = macd['MACDs_12_26_9'][-1]
             
             # Logging for debugging
             log(f"--- Debug info for {ticker} ---")
@@ -130,4 +129,4 @@ class TradingStrategy(Strategy):
             
             log("----------------------------")
 
-        return TargetAllocation(allocation_dict)
+        return TargetAllocation(allocation_dict))
