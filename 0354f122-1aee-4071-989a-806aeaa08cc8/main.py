@@ -3,7 +3,7 @@ from surmount.technical_indicators import MACD, SMA
 from surmount.logging import log
 import numpy as np
 
-def SAM(ticker, data, cc_length=8, median_length=8, smooth_length=8):
+def SAM(ticker, data, cc_length=8, median_length=8, smooth_length=14):
     price_data = [i[ticker]['close'] for i in data]
     high_data = [i[ticker]['high'] for i in data]
     low_data = [i[ticker]['low'] for i in data]
@@ -92,7 +92,7 @@ class TradingStrategy(Strategy):
 
             # Calculate indicators
             sam = SAM(ticker, price_data)
-            macd = MACD(ticker, price_data, 12, 26)  
+            macd = MACD(ticker, price_data, 3, 10)  
             ema_150 = SMA(ticker, price_data, 150)  
 
             if sam is None or macd is None or ema_150 is None:
@@ -101,8 +101,8 @@ class TradingStrategy(Strategy):
             current_price = price_data[-1][ticker]['close']
             
             # Extract MACD values
-            macd_line = macd['MACD_12_26_9'][-1]
-            signal_line = macd['MACDs_12_26_9'][-1]
+            macd_line = macd['MACD_3_10_16'][-1]
+            signal_line = macd['MACDs_3_10_16'][-1]
             
             # Logging for debugging
             log(f"--- Debug info for {ticker} ---")
