@@ -75,7 +75,8 @@ def SAM(ticker, data, cc_length=8, median_length=8, smooth_length=14):
 
 class TradingStrategy(Strategy):
     def __init__(self):
-        self.holding = {}
+        super().__init__()
+        self.holdings = {ticker: 0 for ticker in self.assets}  # Initialize holdings
 
     @property
     def interval(self):
@@ -83,66 +84,54 @@ class TradingStrategy(Strategy):
 
     @property
     def assets(self):
-        return ["CVX", "PR", "AAPL", "GOOGL", "NVDA"]
+        return ["AAPL"]  
 
     def run(self, data):
         allocation_dict = {ticker: 0 for ticker in self.assets}
         price_data = data["ohlcv"]
 
-        # Initialize holding status for any new assets
         for ticker in self.assets:
-            if ticker not in self.holding:
-                self.holding[ticker] = False
-
-        for ticker in self.assets:
-            if len(price_data) < 150:  # Ensure we have enough data
+            if len(price_data) < max(150, 14):  
                 continue
 
             # Calculate indicators
             sam = SAM(ticker, price_data)
-            macd = MACD(ticker, price_data, 12, 26)
-            ema_150 = SMA(ticker, price_data, 150)  
+            macd = MACD(ticker, price_data, fast=12, slow=26)
+            ema_150 = SMA(ticker, price_data, length=150)  
+            vwap = VWAP(ticker, price_data, length=14)
 
-            if sam is None or macd is None or ema_150 is None:
+            if sam is None or macd is None or ema_150 is None or vwap is None:
                 continue
 
             current_price = price_data[-1][ticker]['close']
-            
-            # Extract MACD values
-            macd_line = macd['MACD_12_26_9'][-1]
-            signal_line = macd['MACDs_12_26_9'][-1]
-            
+        
             # Logging for debugging
             log(f"--- Debug info for {ticker} ---")
             log(f"Current Price: {current_price}")
             log(f"SAM: {sam[-1]}")
-            log(f"MACD line: {macd_line}, Signal line: {signal_line}")
+            log(f"MACD: {macd['macd'][-1]}, Signal: {macd['signal'][-1]}")
             log(f"150-day EMA: {ema_150[-1]}")
-            log(f"Holding: {self.holding[ticker]}")
+            log(f"VWAP: {vwap[-1]}")
 
-            # Entry condition
-            if not self.holding[ticker] and (sam[-1] > 0 and
-                macd_line > signal_line and 
-                current_price > ema_150[-1]):  
+            # Define your strategy conditions
+            if (sam[-1] > 0 and 
+                macd['macd'][-1] > macd['signal'][-1] and 
+                current_price > ema_150[-1] and 
+                current_price > vwap[-1]):
                 
-                allocation_dict[ticker] = 0.10
-                self.holding[ticker] = True
+                # Buy signal
+                allocation_dict[ticker] = 0.25  
+                self.holdings[ticker] = 0.25  # Update holdings
                 log(f"Buy signal for {ticker}")
-
-            # Exit condition
-            elif self.holding[ticker] and current_price < ema_150[-1]:
-                allocation_dict[ticker] = 0.0
-                self.holding[ticker] = False
-                log(f"Sell signal for {ticker} - Price below 150-day SMA")
-
-            # Holding condition
-            elif self.holding[ticker]:
-                allocation_dict[ticker] = 0.10
-                log(f"Holding {ticker}")
+            
+            elif self.holdings[ticker] > 0:
+                # Hold if already holding the asset
+                allocation_dict[ticker] = self.holdings[ticker]
+                log(f"Holding position for {ticker}")
 
             else:
-                log(f"No action for {ticker}")
-            
+                log(f"No signal for {ticker}")
+
             log("----------------------------")
 
         return TargetAllocation(allocation_dict)
