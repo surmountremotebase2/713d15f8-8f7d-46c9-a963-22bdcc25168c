@@ -62,7 +62,7 @@ class TradingStrategy(Strategy):
 
     @property
     def assets(self):
-        return ["AAPL"]  # Add your desired assets
+        return ["SPY", "QQQ", "AAPL", "GOOGL"]
 
     def run(self, data):
         allocation_dict = {ticker: 0 for ticker in self.assets}
@@ -82,28 +82,28 @@ class TradingStrategy(Strategy):
 
             current_price = price_data[-1][ticker]['close']
             
-            # Logging for debugging
+            # Log full indicator outputs
             log(f"--- Debug info for {ticker} ---")
             log(f"Current Price: {current_price}")
             log(f"SAM: {sam[-1]}")
             log(f"Full MACD output: {macd}")
-
-            # Adjust MACD access based on actual output structure
-            if isinstance(macd, (list, np.ndarray)):
-                macd_line = macd[-1]  # Assuming last value is most recent
-                signal_line = macd[-2] if len(macd) > 1 else None
-            elif isinstance(macd, dict):
-                macd_line = macd.get('macd', [])[-1] if macd.get('macd') else None
-                signal_line = macd.get('signal', [])[-1] if macd.get('signal') else None
-            else:
-                log(f"Unexpected MACD output type for {ticker}: {type(macd)}")
-                continue
-
-            log(f"MACD line: {macd_line}, Signal line: {signal_line}")
             log(f"150-day EMA: {ema_150[-1]}")
 
-            # Entry condition without VWAP
-            if (sam[-1] > 0 and 
+            # Attempt to extract MACD and Signal lines
+            macd_line = None
+            signal_line = None
+
+            if isinstance(macd, dict):
+                macd_line = macd.get('macd', [])[-1] if macd.get('macd') else None
+                signal_line = macd.get('signal', [])[-1] if macd.get('signal') else None
+            elif isinstance(macd, (list, tuple)) and len(macd) >= 2:
+                macd_line = macd[0]
+                signal_line = macd[1]
+
+            log(f"MACD line: {macd_line}, Signal line: {signal_line}")
+
+            # Entry condition
+            if (sam[-1] > 0 and
                 macd_line is not None and signal_line is not None and
                 macd_line > signal_line and 
                 current_price > ema_150[-1]):  
