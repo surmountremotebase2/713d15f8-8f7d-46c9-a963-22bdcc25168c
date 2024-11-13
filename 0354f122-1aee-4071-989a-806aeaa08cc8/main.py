@@ -73,6 +73,30 @@ def SAM(ticker, data, cc_length=8, median_length=8, smooth_length=14):
 
     return bounded_sam.tolist()
 
+def custom_macd(prices, fast_period=12, slow_period=26, signal_period=9):
+    # Calculate EMAs
+    ema_fast = np.convolve(prices, np.ones(fast_period)/fast_period, mode='valid')
+    ema_slow = np.convolve(prices, np.ones(slow_period)/slow_period, mode='valid')
+    
+    # Calculate MACD line
+    macd_line = ema_fast[len(ema_fast) - len(ema_slow):] - ema_slow
+    
+    # Calculate Signal line
+    signal_line = np.convolve(macd_line, np.ones(signal_period)/signal_period, mode='valid')
+    
+    # Adjust MACD line to match signal line length
+    macd_line = macd_line[len(macd_line) - len(signal_line):]
+    
+    return {'macd': macd_line.tolist(), 'signal': signal_line.tolist()}
+
+            # Use custom MACD function
+            prices = [i[ticker]['close'] for i in price_data]
+            macd_result = custom_macd(prices)
+            
+            if 'macd' not in macd_result or 'signal' not in macd_result:
+                log(f"Custom MACD calculation failed for {ticker}")
+                continue
+
 class TradingStrategy(Strategy):
     def __init__(self):
         super().__init__()
@@ -98,9 +122,11 @@ class TradingStrategy(Strategy):
             sam = SAM(ticker, price_data)
 
             log(f"Calculating MACD for {ticker}")
-            macd = MACD(ticker, price_data, fast=12, slow=26)
-            if macd is None or 'macd' not in macd or 'signal' not in macd:
-                log(f"MACD calculation failed or returned unexpected structure for {ticker}")
+            prices = [i[ticker]['close'] for i in price_data]
+            macd_result = custom_macd(prices)
+
+            if 'macd' not in macd_result or 'signal' not in macd_result:
+                log(f"MACD calculation failed for {ticker}")
                 continue
                     
             ema_150 = SMA(ticker, price_data, length=150)  
