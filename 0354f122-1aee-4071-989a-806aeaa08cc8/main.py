@@ -92,7 +92,7 @@ class TradingStrategy(Strategy):
 
             # Calculate indicators
             sam = SAM(ticker, price_data)
-            macd = MACD(ticker, price_data. 12, 26)  # Use default parameters
+            macd = MACD(ticker, price_data. 12, 26) 
             ema_150 = SMA(ticker, price_data, 150)  
 
             if sam is None or macd is None or ema_150 is None:
