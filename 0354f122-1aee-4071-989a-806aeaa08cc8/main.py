@@ -139,9 +139,10 @@ class TradingStrategy(Strategy):
                 current_price > ema_150[-1]):
                 
                 # Buy signal
-                allocation_dict[ticker] = 0.25  
-                self.holdings[ticker] = 0.25  # Update holdings
-                log(f"Buy signal for {ticker}")
+                if self.holdings[ticker] == 0:
+                    allocation_dict[ticker] = 0.25  
+                    self.holdings[ticker] = 0.25  # Update holdings
+                    log(f"Buy signal for {ticker}")
             
             elif self.holdings[ticker] > 0:
                 # Hold if already holding the asset
