@@ -5,11 +5,16 @@ import numpy as np
 
 def SAM(ticker, data, cc_length=8, median_length=8, smooth_length=8):
     price_data = [i[ticker]['close'] for i in data]
+    high_data = [i[ticker]['high'] for i in data]
+    low_data = [i[ticker]['low'] for i in data]
     
     if len(price_data) < max(cc_length, median_length, smooth_length) + 3:
+        log(f"Not enough data for SAM calculation for {ticker}")
         return None
 
     price = np.array(price_data)
+    high = np.array(high_data)
+    low = np.array(low_data)
 
     def cyber_cycle(src, length):
         smooth = (src + 2 * np.roll(src, 1) + 2 * np.roll(src, 2) + np.roll(src, 3)) / 6
@@ -53,7 +58,16 @@ def SAM(ticker, data, cc_length=8, median_length=8, smooth_length=8):
     for i in range(2, len(value)):
         sam[i] = c1 * value[i] + c2 * sam[i-1] + c3 * sam[i-2]
 
-    return sam.tolist()
+    # Calculate ATR for normalization
+    tr = np.maximum(high - low, np.abs(high - np.roll(price, 1)), np.abs(low - np.roll(price, 1)))
+    atr = np.mean(tr[-14:])  # 14-period ATR
+
+    # Normalize SAM by ATR
+    normalized_sam = sam / atr if atr != 0 else sam
+
+    log(f"SAM calculation for {ticker}: min={np.min(normalized_sam)}, max={np.max(normalized_sam)}, mean={np.mean(normalized_sam)}")
+
+    return normalized_sam.tolist()
 
 class TradingStrategy(Strategy):
     @property
