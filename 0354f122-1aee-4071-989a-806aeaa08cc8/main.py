@@ -114,7 +114,7 @@ class TradingStrategy(Strategy):
             # Define your strategy conditions
             if (sam[-1] > 0 and 
                 macd['macd'][-1] > macd['signal'][-1] and 
-                current_price > ema_150[-1]:
+                current_price > ema_150[-1]):
                 
                 # Buy signal
                 allocation_dict[ticker] = 0.25  
