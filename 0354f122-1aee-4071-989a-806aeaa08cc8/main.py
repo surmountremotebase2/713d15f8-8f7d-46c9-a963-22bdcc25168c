@@ -92,7 +92,8 @@ class TradingStrategy(Strategy):
 
             # Calculate indicators
             sam = SAM(ticker, price_data)
-            macd = MACD(ticker, price_data, 3, 10)  
+            # Modified MACD call with new parameters: 3, 10, 16
+            macd = MACD(ticker, price_data, 3, 10, 16)  
             ema_150 = SMA(ticker, price_data, 150)  
 
             if sam is None or macd is None or ema_150 is None:
@@ -100,7 +101,7 @@ class TradingStrategy(Strategy):
 
             current_price = price_data[-1][ticker]['close']
             
-            # Extract MACD values
+            # Extract MACD values with new key names
             macd_line = macd['MACD_3_10_16'][-1]
             signal_line = macd['MACDs_3_10_16'][-1]
             
