@@ -116,7 +116,7 @@ class TradingStrategy(Strategy):
 
             log(f"Calculating MACD for {ticker}")
             prices = [i[ticker]['close'] for i in price_data]
-            macd_result = custom_macd(prices)
+            macd = custom_macd(prices)
 
             if 'macd' not in macd_result or 'signal' not in macd_result:
                 log(f"MACD calculation failed for {ticker}")
@@ -124,7 +124,8 @@ class TradingStrategy(Strategy):
                     
             ema_150 = SMA(ticker, price_data, length=150)  
 
-            if sam is None or macd is None or ema_150 is None:
+            if sam is None or macd is None or 'macd' not in macd or 'signal' not in macd or ema_150 is None:
+                log(f"Indicator calculation failed for {ticker}")
                 continue
 
             current_price = price_data[-1][ticker]['close']
