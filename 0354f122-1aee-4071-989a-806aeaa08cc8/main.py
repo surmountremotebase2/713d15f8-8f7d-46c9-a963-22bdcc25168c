@@ -74,13 +74,15 @@ def SAM(ticker, data, cc_length=8, median_length=8, smooth_length=14):
     return bounded_sam.tolist()
 
 class TradingStrategy(Strategy):
+    holding = {ticker: False for ticker in ["SPY", "QQQ", "AAPL", "GOOGL"]}
+
     @property
     def interval(self):
         return "1day"
 
     @property
     def assets(self):
-        return ["AAPL", "NVDA"]
+        return ["SPY", "QQQ", "AAPL", "GOOGL"]
 
     def run(self, data):
         allocation_dict = {ticker: 0 for ticker in self.assets}
@@ -92,7 +94,7 @@ class TradingStrategy(Strategy):
 
             # Calculate indicators
             sam = SAM(ticker, price_data)
-            macd = MACD(ticker, price_data, 12, 26)  # Add fast and slow periods
+            macd = MACD(ticker, price_data, 12, 26)
             ema_150 = SMA(ticker, price_data, 150)  
 
             if sam is None or macd is None or ema_150 is None:
@@ -110,19 +112,27 @@ class TradingStrategy(Strategy):
             log(f"SAM: {sam[-1]}")
             log(f"MACD line: {macd_line}, Signal line: {signal_line}")
             log(f"150-day EMA: {ema_150[-1]}")
+            log(f"Holding: {self.holding[ticker]}")
 
             # Entry condition
-            if (sam[-1] > 0 and
+            if not self.holding[ticker] and (sam[-1] > 0 and
                 macd_line > signal_line and 
                 current_price > ema_150[-1]):  
                 
-                allocation_dict[ticker] = 0.25  
+                allocation_dict[ticker] = 0.25
+                self.holding[ticker] = True
                 log(f"Buy signal for {ticker}")
 
-            # Sell condition when price drops below the 150-day SMA
-            elif current_price < ema_150[-1]:
-                allocation_dict[ticker] = 0.0  
+            # Exit condition
+            elif self.holding[ticker] and current_price < ema_150[-1]:
+                allocation_dict[ticker] = 0.0
+                self.holding[ticker] = False
                 log(f"Sell signal for {ticker} - Price below 150-day SMA")
+
+            # Holding condition
+            elif self.holding[ticker]:
+                allocation_dict[ticker] = 0.25
+                log(f"Holding {ticker}")
 
             else:
                 log(f"No action for {ticker}")
