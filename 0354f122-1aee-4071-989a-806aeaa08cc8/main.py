@@ -80,7 +80,7 @@ class TradingStrategy(Strategy):
 
     @property
     def assets(self):
-        return ["AAPL", "GOOGL"]
+        return ["SPY", "QQQ", "AAPL", "GOOGL"]
 
     def run(self, data):
         allocation_dict = {ticker: 0 for ticker in self.assets}
@@ -92,7 +92,7 @@ class TradingStrategy(Strategy):
 
             # Calculate indicators
             sam = SAM(ticker, price_data)
-            macd = MACD(ticker, price_data. 12, 26) 
+            macd = MACD(ticker, price_data, 12, 26)  # Add fast and slow periods
             ema_150 = SMA(ticker, price_data, 150)  
 
             if sam is None or macd is None or ema_150 is None:
