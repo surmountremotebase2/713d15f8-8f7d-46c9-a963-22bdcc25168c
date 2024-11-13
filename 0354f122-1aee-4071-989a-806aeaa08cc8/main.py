@@ -82,29 +82,19 @@ class TradingStrategy(Strategy):
 
             current_price = price_data[-1][ticker]['close']
             
-            # Log full indicator outputs
+            # Extract MACD values
+            macd_line = macd['MACD_12_26_9'][-1]
+            signal_line = macd['MACDs_12_26_9'][-1]
+            
+            # Logging for debugging
             log(f"--- Debug info for {ticker} ---")
             log(f"Current Price: {current_price}")
             log(f"SAM: {sam[-1]}")
-            log(f"Full MACD output: {macd}")
-            log(f"150-day EMA: {ema_150[-1]}")
-
-            # Attempt to extract MACD and Signal lines
-            macd_line = None
-            signal_line = None
-
-            if isinstance(macd, dict):
-                macd_line = macd.get('macd', [])[-1] if macd.get('macd') else None
-                signal_line = macd.get('signal', [])[-1] if macd.get('signal') else None
-            elif isinstance(macd, (list, tuple)) and len(macd) >= 2:
-                macd_line = macd[0]
-                signal_line = macd[1]
-
             log(f"MACD line: {macd_line}, Signal line: {signal_line}")
+            log(f"150-day EMA: {ema_150[-1]}")
 
             # Entry condition
             if (sam[-1] > 0 and
-                macd_line is not None and signal_line is not None and
                 macd_line > signal_line and 
                 current_price > ema_150[-1]):  
                 
