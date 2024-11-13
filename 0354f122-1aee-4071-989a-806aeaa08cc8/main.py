@@ -129,4 +129,4 @@ class TradingStrategy(Strategy):
             
             log("----------------------------")
 
-        return TargetAllocation(allocation_dict))
+        return TargetAllocation(allocation_dict)
