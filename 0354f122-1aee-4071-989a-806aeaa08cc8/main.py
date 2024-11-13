@@ -101,7 +101,7 @@ class TradingStrategy(Strategy):
             macd = MACD(ticker, price_data, fast=12, slow=26)
             if macd is None or 'macd' not in macd or 'signal' not in macd:
                 log(f"MACD calculation failed or returned unexpected structure for {ticker}")
-                    continue
+                continue
                     
             ema_150 = SMA(ticker, price_data, length=150)  
 
