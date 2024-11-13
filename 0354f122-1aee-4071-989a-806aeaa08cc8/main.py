@@ -89,13 +89,6 @@ def custom_macd(prices, fast_period=12, slow_period=26, signal_period=9):
     
     return {'macd': macd_line.tolist(), 'signal': signal_line.tolist()}
 
-            # Use custom MACD function
-            prices = [i[ticker]['close'] for i in price_data]
-            macd_result = custom_macd(prices)
-            
-            if 'macd' not in macd_result or 'signal' not in macd_result:
-                log(f"Custom MACD calculation failed for {ticker}")
-                continue
 
 class TradingStrategy(Strategy):
     def __init__(self):
