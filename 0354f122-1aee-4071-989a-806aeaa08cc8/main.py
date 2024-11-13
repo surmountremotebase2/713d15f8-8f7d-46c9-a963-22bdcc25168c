@@ -62,12 +62,16 @@ def SAM(ticker, data, cc_length=8, median_length=8, smooth_length=8):
     tr = np.maximum(high - low, np.abs(high - np.roll(price, 1)), np.abs(low - np.roll(price, 1)))
     atr = np.mean(tr[-14:])  # 14-period ATR
 
-    # Normalize SAM by ATR
-    normalized_sam = sam / atr if atr != 0 else sam
+    # Normalize SAM by ATR and apply a scaling factor
+    scaling_factor = 0.1  # Adjust this value to change the scale of SAM
+    normalized_sam = (sam / atr) * scaling_factor
 
-    log(f"SAM calculation for {ticker}: min={np.min(normalized_sam)}, max={np.max(normalized_sam)}, mean={np.mean(normalized_sam)}")
+    # Apply a tanh function to bound the values between -1 and 1
+    bounded_sam = np.tanh(normalized_sam)
 
-    return normalized_sam.tolist()
+    log(f"SAM calculation for {ticker}: min={np.min(bounded_sam)}, max={np.max(bounded_sam)}, mean={np.mean(bounded_sam)}")
+
+    return bounded_sam.tolist()
 
 class TradingStrategy(Strategy):
     @property
