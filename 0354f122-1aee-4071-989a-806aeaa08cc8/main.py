@@ -68,52 +68,52 @@ class TradingStrategy(Strategy):
         allocation_dict = {ticker: 0 for ticker in self.assets}
         price_data = data["ohlcv"]
 
-    for ticker in self.assets:
-        if len(price_data) < 150:  # Ensure we have enough data
-            continue
+        for ticker in self.assets:
+            if len(price_data) < 150:  # Ensure we have enough data
+                continue
 
-        # Calculate indicators
-        sam = SAM(ticker, price_data)
-        macd = MACD(ticker, price_data, 12, 26)  
-        ema_150 = SMA(ticker, price_data, 150)  
+            # Calculate indicators
+            sam = SAM(ticker, price_data)
+            macd = MACD(ticker, price_data, 12, 26)  
+            ema_150 = SMA(ticker, price_data, 150)  
 
-        if sam is None or macd is None or ema_150 is None:
-            continue
+            if sam is None or macd is None or ema_150 is None:
+                continue
 
-        current_price = price_data[-1][ticker]['close']
+            current_price = price_data[-1][ticker]['close']
         
-        # Logging for debugging
-        log(f"--- Debug info for {ticker} ---")
-        log(f"Current Price: {current_price}")
-        log(f"SAM: {sam[-1]}")
+            # Logging for debugging
+            log(f"--- Debug info for {ticker} ---")
+            log(f"Current Price: {current_price}")
+            log(f"SAM: {sam[-1]}")
 
-        # Log the entire MACD output for debugging
-        log(f"MACD Output: {macd}")
+            # Log the entire MACD output for debugging
+            log(f"MACD Output: {macd}")
 
-        if 'macd' in macd and 'signal' in macd:
-            log(f"MACD: {macd['macd'][-1]}, Signal: {macd['signal'][-1]}")
-        else:
-            log("MACD output does not contain expected keys.")
-            continue  # Skip this iteration if keys are missing
+            if 'macd' in macd and 'signal' in macd:
+                log(f"MACD: {macd['macd'][-1]}, Signal: {macd['signal'][-1]}")
+            else:
+                log("MACD output does not contain expected keys.")
+                continue  # Skip this iteration if keys are missing
         
-        log(f"150-day EMA: {ema_150[-1]}")
+            log(f"150-day EMA: {ema_150[-1]}")
 
-        # Entry condition without VWAP
-        if (sam[-1] > 0 and 
-            macd['macd'][-1] > macd['signal'][-1] and 
-            current_price > ema_150[-1]):  
+            # Entry condition without VWAP
+            if (sam[-1] > 0 and 
+                macd['macd'][-1] > macd['signal'][-1] and 
+                current_price > ema_150[-1]):  
             
-            allocation_dict[ticker] = 0.25  
-            log(f"Buy signal for {ticker}")
+                allocation_dict[ticker] = 0.25  
+                log(f"Buy signal for {ticker}")
 
-        # Sell condition when price drops below the 150-day SMA
-        elif current_price < ema_150[-1]:
-            allocation_dict[ticker] = 0.0  
-            log(f"Sell signal for {ticker} - Price below 150-day SMA")
+            # Sell condition when price drops below the 150-day SMA
+            elif current_price < ema_150[-1]:
+                allocation_dict[ticker] = 0.0  
+                log(f"Sell signal for {ticker} - Price below 150-day SMA")
 
-        else:
-            log(f"No action for {ticker}")
+            else:
+                log(f"No action for {ticker}")
         
-        log("----------------------------")
+            log("----------------------------")
 
-    return TargetAllocation(allocation_dict)
+        return TargetAllocation(allocation_dict)
