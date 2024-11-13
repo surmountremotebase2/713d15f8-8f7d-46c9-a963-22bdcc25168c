@@ -74,7 +74,8 @@ def SAM(ticker, data, cc_length=8, median_length=8, smooth_length=14):
     return bounded_sam.tolist()
 
 class TradingStrategy(Strategy):
-    holding = {ticker: False for ticker in ["SPY", "QQQ", "AAPL", "GOOGL"]}
+    def __init__(self):
+        self.holding = {}
 
     @property
     def interval(self):
@@ -82,11 +83,16 @@ class TradingStrategy(Strategy):
 
     @property
     def assets(self):
-        return ["NVDA", "PR", "AAPL", "GOOGL"]
+        return ["CVX", "PR", "AAPL", "GOOGL", "NVDA"]
 
     def run(self, data):
         allocation_dict = {ticker: 0 for ticker in self.assets}
         price_data = data["ohlcv"]
+
+        # Initialize holding status for any new assets
+        for ticker in self.assets:
+            if ticker not in self.holding:
+                self.holding[ticker] = False
 
         for ticker in self.assets:
             if len(price_data) < 150:  # Ensure we have enough data
