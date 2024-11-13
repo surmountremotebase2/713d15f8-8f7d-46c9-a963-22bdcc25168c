@@ -80,7 +80,7 @@ class TradingStrategy(Strategy):
 
     @property
     def assets(self):
-        return ["AAPL", "GOOGL"]
+        return ["AAPL", "NVDA"]
 
     def run(self, data):
         allocation_dict = {ticker: 0 for ticker in self.assets}
