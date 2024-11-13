@@ -125,7 +125,7 @@ class TradingStrategy(Strategy):
                 macd_line > signal_line and 
                 current_price > ema_150[-1]):  
                 
-                allocation_dict[ticker] = 0.25
+                allocation_dict[ticker] = 0.10
                 self.holding[ticker] = True
                 log(f"Buy signal for {ticker}")
 
@@ -137,7 +137,7 @@ class TradingStrategy(Strategy):
 
             # Holding condition
             elif self.holding[ticker]:
-                allocation_dict[ticker] = 0.25
+                allocation_dict[ticker] = 0.10
                 log(f"Holding {ticker}")
 
             else:
